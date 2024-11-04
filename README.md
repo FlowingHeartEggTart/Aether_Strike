@@ -36,7 +36,7 @@
 
 ## 💻 使用说明
 
-### 安装与运行
+安装与运行
 1. 将项目下载或克隆到本地。
    ```bash
    git clone https://github.com/FlowingHeartEggTart/Aether_Strike.git
@@ -48,11 +48,6 @@ index.html              # 游戏入口页面
 HTML5 Canvas 用于渲染游戏场景和高射炮、飞机等对象。
 JavaScript 实现了游戏逻辑和控制，包括碰撞检测、物理模拟和得分计算。
 Local Storage 用于存储最高分和玩家信息，确保每局结束后可以查看历史记录。
-
-###页面展示
-
-
-
 
 🏆 未来计划
 多人联机模式：加入远程对战的功能。
