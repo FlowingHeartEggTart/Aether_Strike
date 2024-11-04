@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<title>高射炮打飞机游戏</title>
+		<style>
+			body {
+				margin: 0;
+				padding: 0;
+				background-color: #f4f4f4;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				height: 100vh;
+				font-family: Arial, sans-serif;
+			}
+
+			.game-container {
+				width: 100%;
+				max-width: 700px;
+				padding: 20px;
+				background: white;
+				border-radius: 8px;
+				box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+				background-image: url('bg.png');
+				background-size: cover;
+				background-position: center;
+			}
+
+			.canvas-container {
+				width: 100%;
+				height: 300px;
+				border: 1px solid #ccc;
+				border-radius: 4px;
+				margin-bottom: 20px;
+			}
+
+			.control-panel {
+				display: flex;
+				justify-content: space-around;
+				margin-bottom: 20px;
+			}
+
+			.score-board {
+				text-align: center;
+			}
+
+			label {
+				margin-right: 10px;
+			}
+
+			.button {
+				background-color: #4CAF50;
+				color: white;
+				padding: 14px 20px;
+				margin: 8px 0;
+				border: none;
+				border-radius: 4px;
+				cursor: pointer;
+			}
+
+			.button:hover {
+				background-color: #45a049;
+			}
+
+			.game-info {
+				margin: 20px;
+				padding: 20px;
+				background-color: #f4f4f4;
+				border-radius: 8px;
+				box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+				font-family: Arial, sans-serif;
+			}
+
+			.game-info h1 {
+				color: #333;
+				text-align: center;
+			}
+
+			.game-info p {
+				margin: 10px 0;
+			}
+		</style>
+		<!-- 引入图片资源 -->
+		<img src="turret.png" id="turretImage" style="display:none;">
+		<img src="fighter.png" id="fighterImage" style="display:none;">
+		<img src="bomber.png" id="bomberImage" style="display:none;">
+		<img src="bg.png" id="bgImage" style="display:none;">
+	</head>
+	<body>
+		<div class="game-container">
+			<div>
+				<h1 class="text-3xl font-bold text-gray-800">游戏界面</h1>
+
+				<!-- Canvas for game -->
+				<div class="canvas-container">
+					<canvas id="gameCanvas" width="500" height="300"></canvas>
+				</div>
+
+				<!-- Control Panel -->
+				<div class="control-panel">
+					<div>
+						<label for="angle">高射炮角度控制:</label>
+						<input id="angle" type="range" min="0" max="90" value="45">
+						<span id="angleValue">45°</span>
+					</div>
+					<button id="fireCannonButton" class="button" onclick="fireCannon()">发射</button>
+				</div>
+
+				<!-- Initial Speed Display -->
+				<div>
+					<label for="initialSpeed">炮弹初始速度:</label>
+					<input id="initialSpeed" type="number" min="0" max="100" value="50">
+					<span id="initialSpeedDisplay">50</span>
+				</div>
+
+				<!-- Bullet Type Selection -->
+				<div>
+					<label for="bulletType">炮弹类型:</label>
+					<select id="bulletType">
+						<option value="type1">普通炮弹</option>
+						<option value="type2">智能炮弹</option>
+					</select>
+				</div>
+
+				<!-- Score Board -->
+				<div class="score-board">
+					<h2>得分板</h2>
+					<div>玩家1得分: <span id="player1Score">0</span></div>
+					<div>最高得分: <span id="highScore">0</span></div>
+				</div>
+
+				<!-- Timer -->
+				<div class="timer">
+					<h2>时间剩余: <span id="timeRemaining">20</span> 秒</h2>
+				</div>
+				<h2>时间剩余: <span id="countdown">20</span> 秒</h2>
+			</div>
+		</div>
+	</body>
+
+	<script>
+		let cannonAngle = 45;
+		let bulletSpeed = 50;
+		let playerScore = 0;
+		let highScore = 0;
+		let isGameOver = false; // 新增游戏结束标志
+		let bulletRadius = 3; // 初始值
+		let bulletColor = 'black'; // 初始值
+		const canvas = document.getElementById('gameCanvas');
+		const ctx = canvas.getContext('2d');
+		const angleValue = document.getElementById('angleValue');
+		const player1Score = document.getElementById('player1Score');
+		const highScoreEl = document.getElementById('highScore');
+		const fireCannonButton = document.getElementById('fireCannonButton');
+		const initialSpeedInput = document.getElementById('initialSpeed');
+		const bulletTypeSelect = document.getElementById('bulletType');
+		const initialSpeedDisplay = document.getElementById('initialSpeedDisplay');
+		const countdownElement = document.querySelector('#countdown');
+
+		// 加载图片资源
+		const turretImage = new Image();
+		turretImage.src = document.getElementById('turretImage').src;
+		const fighterImage = new Image();
+		fighterImage.src = document.getElementById('fighterImage').src;
+		const bomberImage = new Image();
+		bomberImage.src = document.getElementById('bomberImage').src;
+
+		function setCanvasSize() {
+			canvas.width = canvas.offsetWidth;
+			canvas.height = canvas.offsetHeight;
+		}
+
+
+		function init() {
+			setCanvasSize();
+
+			const cannonX = canvas.width - 30; // 炮台放在右下角
+			const cannonY = canvas.height - 30;
+
+			const cannon = {
+				x: cannonX,
+				y: cannonY,
+				angle: cannonAngle
+			};
+
+			let bullets = [];
+			let planes = [];
+
+			// 创建飞机
+			for (let i = 0; i < 10; i++) { // 增加飞机数量
+				const type = Math.random() > 0.5 ? 'fighter' : 'bomber';
+				let speed = 0.5 + i * 0.25; // 减慢飞机速度
+				let score = 10; // 默认得分
+				if (type === 'bomber') {
+					speed += 0.5; // 较快的速度
+					score = 20; // 较高的得分
+				}
+				planes.push({
+					x: -60 * i, // 飞机起始位置分散
+					y: Math.random() * (canvas.height - 60),
+					width: 60,
+					height: 20,
+					speed: speed,
+					type: type,
+					score: score
+				});
+			}
+
+			function updateAngleDisplay() {
+				angleValue.textContent = cannonAngle;
+			}
+
+
+			function updateBulletSpeed() {
+				bulletSpeed = initialSpeedInput.value;
+				initialSpeedDisplay.textContent = bulletSpeed;
+			}
+
+			function updateBulletType() {
+				const selectedType = bulletTypeSelect.value;
+
+				// 清空现有的子弹数组，以便重新创建子弹
+				bullets = [];
+
+				// 根据选择更新炮弹类型属性
+				if (selectedType === 'type1') {
+					// 普通炮弹设置
+					bulletRadius = 3;
+					bulletColor = 'black';
+				} else if (selectedType === 'type2') {
+					// 智能炮弹设置
+					bulletRadius = 5; // 智能炮弹稍微大一点
+					bulletColor = 'blue'; // 智能炮弹颜色不同
+					// 为每个智能炮弹设置随机的爆炸概率
+					for (let i = 0; i < bullets.length; i++) {
+						bullets[i].explosionRadius = EXPLOSION_RADIUS;
+						bullets[i].explosionProbability = Math.random() * (EXPLOSION_PROBABILITY_MAX -
+							EXPLOSION_PROBABILITY_MIN) + EXPLOSION_PROBABILITY_MIN;
+					}
+				}
+			}
+
+
+			// 修改drawBullets函数以使用不同的颜色和半径
+			function drawBullets() {
+				ctx.fillStyle = bulletColor;
+				bullets.forEach(bullet => {
+					ctx.beginPath();
+					ctx.arc(bullet.x, bullet.y, bulletRadius, 0, Math.PI * 2);
+					ctx.fill();
+				});
+			}
+
+			function fireCannon() {
+				const bullet = {
+					x: cannon.x + 20, // 炮弹起始位置在炮口中心
+					y: cannon.y - 10,
+					radius: 3,
+					speed: bulletSpeed * Math.tan(cannonAngle * Math.PI / 180), // 根据角度计算速度
+					angle: cannonAngle
+				};
+				bullets.push(bullet);
+			}
+
+			function drawCannon() {
+				ctx.drawImage(turretImage, cannon.x - 15, cannon.y - 20, 30, 20);
+			}
+
+
+
+			function updateBullets() {
+				const acceleration = 0.98; // 重力加速度
+				bullets.forEach((bullet, index) => {
+					const radians = bullet.angle * Math.PI / 180;
+					bullet.x += bullet.speed * Math.cos(radians);
+					bullet.y -= bullet.speed * Math.sin(radians); // 调整为向上发射
+					bullet.speed *= acceleration; // 应用重力效果
+					if (bullet.y < -bullet.radius || bullet.x > canvas.width + bullet.radius) {
+						bullets.splice(index, 1);
+					}
+				});
+			}
+
+			function drawPlanes() {
+				planes.forEach(plane => {
+					if (plane.type === 'fighter') {
+						ctx.drawImage(fighterImage, plane.x, plane.y, plane.width, plane.height);
+					} else {
+						ctx.drawImage(bomberImage, plane.x, plane.y, plane.width, plane.height);
+					}
+				});
+			}
+
+			function updatePlanes() {
+				planes.forEach((plane, index) => {
+					plane.x += plane.speed;
+					if (plane.x > canvas.width + plane.width / 2) {
+						// 动态生成新飞机
+						plane.x = -plane.width / 2 - 60;
+						plane.y = Math.random() * (canvas.height - 60);
+					}
+				});
+			}
+
+			function checkCollisions() {
+				bullets.forEach((bullet, bulletIndex) => {
+					planes.forEach((plane, planeIndex) => {
+						// 计算两物体中心的距离
+						const distance = Math.sqrt(Math.pow(bullet.x - plane.x, 2) + Math.pow(bullet.y - plane
+							.y, 2));
+
+						if (selectedType === 'type1') {
+							// 对于普通炮弹，只有直接命中才有效
+							if (distance < bullet.radius + plane.width / 2) {
+								planes.splice(planeIndex, 1);
+								bullets.splice(bulletIndex, 1);
+								playerScore += 10;
+								updateScoreDisplay();
+							}
+						} else if (selectedType === 'type2') {
+							// 对于智能炮弹，如果在爆炸半径内则根据概率摧毁飞机
+							if (distance <= bullet.explosionRadius) {
+								if (Math.random() < bullet.explosionProbability) {
+									planes.splice(planeIndex, 1);
+									bullets.splice(bulletIndex, 1);
+									playerScore += 20;
+									updateScoreDisplay();
+								}
+							}
+						}
+					});
+				});
+			}
+
+
+			function updateScoreDisplay() {
+				player1Score.textContent = playerScore;
+				highScoreEl.textContent = Math.max(highScore, playerScore);
+			}
+
+			// 倒计时函数
+			function startCountdown(duration, display) {
+				let timer = duration,
+					minutes, seconds;
+				const countdownTimer = setInterval(function() {
+					minutes = parseInt(timer / 60, 10);
+					seconds = parseInt(timer % 60, 10);
+
+					minutes = minutes < 10 ? "0" + minutes : minutes;
+					seconds = seconds < 10 ? "0" + seconds : seconds;
+
+					display.textContent = `${minutes}:${seconds}`;
+
+					if (--timer < 0) {
+						clearInterval(countdownTimer);
+						isGameOver = true; // 倒计时结束后游戏结束
+						window.location.href = 'over.html?score=' + encodeURIComponent(playerScore);
+					}
+				}, 1000);
+			}
+
+			function gameLoop() {
+				if (isGameOver) return;
+				ctx.clearRect(0, 0, canvas.width, canvas.height);
+				drawCannon();
+				drawBullets();
+				updateBullets();
+				drawPlanes();
+				updatePlanes();
+				checkCollisions();
+				requestAnimationFrame(gameLoop);
+			}
+
+			// 控制面板逻辑
+			document.getElementById('angle').addEventListener('input', updateAngleDisplay);
+			initialSpeedInput.addEventListener('input', updateBulletSpeed);
+			bulletTypeSelect.addEventListener('change', updateBulletType);
+			fireCannonButton.addEventListener('click', fireCannon);
+
+			// 添加键盘事件监听器
+			document.addEventListener('keydown', function(event) {
+				switch (event.key) {
+					case 'ArrowUp':
+						cannonAngle += 1;
+						break;
+					case 'ArrowDown':
+						cannonAngle -= 1;
+						break;
+					case ' ':
+						fireCannon();
+						break;
+				}
+				updateAngleDisplay(); // 更新显示角度
+			});
+
+			// 初始化倒计时
+			startCountdown(20, countdownElement);
+
+			// 初始化游戏循环
+			gameLoop();
+			window.addEventListener('resize', setCanvasSize); // 确保窗口大小变化时canvas尺寸正确
+		}
+
+		init(); // 初始化游戏
+	</script>
+	</body>
+</html>

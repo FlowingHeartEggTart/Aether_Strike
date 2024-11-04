@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<title>高射炮打飞机</title>
+		<style>
+			body {
+				font-family: 'Arial', sans-serif;
+				margin: 0;
+				padding: 0;
+				background-color: #f4f4f4;
+			}
+
+			.container {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				min-height: 100vh;
+			}
+
+			.title {
+				font-size: 2.5em;
+				margin-bottom: 0.5em;
+			}
+
+			.description {
+				font-size: 1em;
+				margin-bottom: 1.5em;
+			}
+
+			.rules {
+				background-color: #fff;
+				padding: 20px;
+				border-radius: 8px;
+				max-width: 600px;
+				box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+				margin-bottom: 20px;
+			}
+
+			.rules h2 {
+				margin-top: 0;
+			}
+
+			.rules li {
+				margin-bottom: 10px;
+			}
+
+			.start-button {
+				display: inline-block;
+				font-size: 1em;
+				padding: 10px 20px;
+				border-radius: 5px;
+				background-color: #007bff;
+				color: white;
+				text-decoration: none;
+				transition: background-color 0.3s;
+				margin-bottom: 20px;
+			}
+
+			.start-button:hover {
+				background-color: #0056b3;
+			}
+		</style>
+	</head>
+	<body>
+
+		<div class="container">
+			<div class="text-center">
+				<h1 class="title">高射炮打飞机</h1>
+				<p class="description">模拟高射炮打飞机，体验射击的乐趣！</p>
+				<a href="javascript:void(0)" class="start-button" onclick="startGame()">开始游戏</a>
+			</div>
+			<div class="rules">
+				<h2>游戏规则和说明</h2>
+				<p><strong>游戏控制：</strong>使用键盘上的“上”和“下”箭头键调整高射炮的角度。使用空格键或鼠标点击发射炮弹。</p>
+				<p><strong>炮弹发射速度：</strong>可以设定或通过键盘操控。</p>
+				<p><strong>得分算法：</strong>合理计算炮手得分，并在游戏中实现。</p>
+				<p><strong>得分记录：</strong>系统存储每轮游戏的最高得分、选手名和日期，并在游戏结束时显示。</p>
+				<p><strong>炮弹初始速度：</strong>可设定，并在屏幕右上角显示。</p>
+				<p><strong>炮弹飞行特性：</strong>遵循抛物线飞行规律，考虑空气阻力影响，飞行速度会变慢。</p>
+				<p><strong>炮弹类型：</strong>包括普通炮弹和智能炮弹，后者具有毁伤半径和不同击中概率。</p>
+				<p><strong>得分计算：</strong>红方根据击落蓝方飞机的数量、种类和击毁程度计算得分。</p>
+				<p><strong>飞机飞行：</strong>飞机从左向右飞行，飞出屏幕右侧蓝方得分。</p>
+				<p><strong>游戏模式：</strong>支持单人和双人对抗游戏。</p>
+				<p><strong>单人游戏
+				：</strong>玩家对抗计算机控制的飞机，飞机种类和飞行特性随机设定。</p>
+				<p><strong>双人游戏：</strong>两名玩家分别控制飞机和高射炮，蓝方通过特定键盘按键控制飞机。</p>
+			</div>
+		</div>
+
+		<script>
+			function startGame() {
+				alert('游戏开始！');
+				window.location.href = 'game2.html'; // 假设游戏页面为game.html
+			}
+		</script>
+
+	</body>
+</html>

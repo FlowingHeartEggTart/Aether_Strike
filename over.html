@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<title>游戏结束</title>
+		<style>
+			body {
+				margin: 0;
+				font-family: 'Arial', sans-serif;
+				background-color: #3c3c3c;
+				/* Dark gray background */
+				color: white;
+				/* White text */
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				height: 100vh;
+			}
+
+			.game-over-container {
+				text-align: center;
+				padding: 20px;
+				border-radius: 10px;
+				background: rgba(255, 255, 255, 0.1);
+			}
+
+			.game-over-container h1 {
+				font-size: 2rem;
+				margin-bottom: 20px;
+			}
+
+			.score-display {
+				font-size: 1.5rem;
+				margin-bottom: 10px;
+			}
+
+			.score,
+			.high-score {
+				display: block;
+				margin-top: 5px;
+			}
+
+			.button {
+				padding: 10px 20px;
+				margin: 10px 5px 0;
+				border: none;
+				border-radius: 5px;
+				cursor: pointer;
+				transition: background-color 0.3s;
+			}
+
+			.restart-btn {
+				background-color: #4CAF50;
+			}
+
+			.restart-btn:hover {
+				background-color: #45a049;
+			}
+
+			.exit-btn {
+				background-color: #f44336;
+			}
+
+			.exit-btn:hover {
+				background-color: #e53935;
+			}
+		</style>
+	</head>
+	<body>
+
+		<div class="game-over-container">
+			<h1>游戏结束</h1>
+			<div class="score-display">
+				<span class="score-label">得分:</span>
+				<span class="score" id="score"></span>
+			</div>
+			<div class="score-display">
+				<span class="score-label">最高得分:</span>
+				<span class="high-score" id="highScore"></span>
+			</div>
+			<button class="button restart-btn" id="restartButton">重新开始</button>
+			<button class="button exit-btn" id="exitButton">退出游戏</button>
+		</div>
+
+		<script>
+			// Get the score from the URL parameter
+			const urlParams = new URLSearchParams(window.location.search);
+			const currentScore = parseInt(urlParams.get('score'), 10) || 0;
+			let highScore = parseInt(localStorage.getItem('highScore'), 10) || 0;
+
+			// Display scores
+			document.getElementById('score').textContent = currentScore;
+
+			// Update high score if current score is higher
+			if (currentScore > highScore) {
+				highScore = currentScore;
+				localStorage.setItem('highScore', highScore);
+			}
+			document.getElementById('highScore').textContent = highScore;
+
+			// Event listeners for buttons
+			document.getElementById('restartButton').addEventListener('click', function() {
+				// Redirect to 'game.html' to restart the game
+				window.location.href = 'game4.html';
+			});
+
+			document.getElementById('exitButton').addEventListener('click', function() {
+				// Close the game window
+				window.close();
+			});
+		</script>
+
+	</body>
+</html>

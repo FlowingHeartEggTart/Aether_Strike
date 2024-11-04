@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<title>高射炮打飞机 - 双人对抗</title>
+		<style>
+			body {
+				margin: 0;
+				padding: 0;
+				background-color: #f4f4f4;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				height: 100vh;
+				font-family: Arial, sans-serif;
+			}
+
+			.game-container {
+				width: 100%;
+				max-width: 800px;
+				padding: 20px;
+				background: white;
+				border-radius: 8px;
+				box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+			}
+
+			.canvas-container {
+				width: 100%;
+				height: 400px;
+				border: 1px solid #ccc;
+				border-radius: 4px;
+				margin-bottom: 20px;
+			}
+
+			.control-panel {
+				display: flex;
+				justify-content: space-around;
+				width: 100%;
+				margin-bottom: 20px;
+			}
+
+			.score-board {
+				text-align: center;
+				margin-bottom: 10px;
+			}
+
+			label,
+			select {
+				margin-right: 10px;
+			}
+
+			.button {
+				background-color: #4CAF50;
+				color: white;
+				padding: 10px 20px;
+				border: none;
+				border-radius: 4px;
+				cursor: pointer;
+				margin: 0 5px;
+			}
+
+			.button:hover {
+				background-color: #45a049;
+			}
+
+			.game-info {
+				width: 100%;
+				text-align: center;
+				margin-top: 20px;
+			}
+
+			.game-info h2 {
+				color: #333;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="game-container">
+			<h1 class="text-3xl font-bold text-gray-800">高射炮打飞机 - 双人对抗</h1>
+
+			<!-- Canvas for game -->
+			<div class="canvas-container">
+				<canvas id="gameCanvas"></canvas>
+			</div>
+
+			<!-- Control Panel for Red Player -->
+			<div class="control-panel">
+				<div>
+					<label for="angle">角度控制:</label>
+					<input id="angle" type="range" min="0" max="90" value="45">
+					<span id="angleValue">45°</span>
+				</div>
+				<button id="fireCannonButton" class="button" onclick="fireCannon()">发射</button>
+			</div>
+
+			<!-- Control Panel for Blue Player -->
+			<div class="control-panel">
+				<div>
+					<label>飞机速度:</label>
+					<input id="planeSpeed" type="number" min="1" max="10" value="1">
+				</div>
+				<button id="moveUpButton" class="button" onclick="movePlane('up')">上</button>
+				<button id="moveDownButton" class="button" onclick="movePlane('down')">下</button>
+				<button id="moveLeftButton" class="button" onclick="movePlane('left')">左</button>
+				<button id="moveRightButton" class="button" onclick="movePlane('right')">右</button>
+			</div>
+
+			<!-- Score Board -->
+			<div class="score-board">
+				<h2>得分板</h2>
+				<div>红方得分: <span id="player1Score">0</span></div>
+				<div>蓝方得分: <span id="player2Score">0</span></div>
+				<div>最高得分: <span id="highScore">0</span></div>
+			</div>
+
+			<!-- Game Info -->
+			<div class="game-info">
+				<h2>游戏说明:</h2>
+				<p>红方使用鼠标控制高射炮，点击发射炮弹。</p>
+				<p>蓝方使用键盘 (WASD) 控制飞机移动。</p>
+				<p>飞机成功飞出屏幕或躲避炮弹可获得得分。</p>
+			</div>
+		</div>
+
+		<script>
+			let cannonAngle = 45;
+			let bulletSpeed = 50;
+			let player1Score = 0;
+			let player2Score = 0;
+			let highScore = 0;
+			let bluePlaneSpeed = 1; // 蓝方飞机速度
+			const canvas = document.getElementById('gameCanvas');
+			const ctx = canvas.getContext('2d');
+			const angleValue = document.getElementById('angleValue');
+			const player1ScoreDisplay = document.getElementById('player1Score');
+			const player2ScoreDisplay = document.getElementById('player2Score');
+			const highScoreDisplay = document.getElementById('highScore');
+			const fireCannonButton = document.getElementById('fireCannonButton');
+			const planeSpeedInput = document.getElementById('planeSpeed');
+
+			// 设置canvas尺寸
+			function setCanvasSize() {
+				canvas.width = canvas.offsetWidth;
+				canvas.height = canvas.offsetHeight;
+			}
+			window.addEventListener('resize', setCanvasSize);
+			setCanvasSize();
+
+			let bullets = [];
+			let bluePlane = {
+				x: canvas.width,
+				y: canvas.height / 2,
+				width: 30,
+				height: 20,
+				speed: bluePlaneSpeed,
+				score: 10 // 蓝方飞机得分
+			};
+
+			// 初始化游戏
+			function init() {
+				// ... 其他初始化代码 ...
+				gameLoop();
+			}
+
+			// 游戏主循环
+			function gameLoop() {
+				if (isGameOver) return;
+
+				ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+				// 绘制蓝方飞机
+				ctx.fillStyle = 'blue';
+				ctx.fillRect(bluePlane.x, bluePlane.y, bluePlane.width, bluePlane.height);
+
+				// 更新和绘制炮弹
+				drawAndUpdateBullets();
+
+				// 更新蓝方飞机位置
+				updateBluePlane();
+
+				// 检查游戏结束条件
+				checkGameOver();
+
+				requestAnimationFrame(gameLoop);
+			}
+
+			// 发射炮弹
+			function fireCannon() {
+				const bullet = {
+					x: canvas.width - 50, // 假设高射炮在画布右侧中间位置
+					y: canvas.height - 50, // 假设高射炮在画布底部中间位置
+					radius: 3,
+					speed: bulletSpeed,
+					angle: cannonAngle * Math.PI / 180 // 角度转换为弧度
+				};
+				bullets.push(bullet);
+			}
+
+			// 绘制和更新炮弹
+			function drawAndUpdateBullets() {
+				ctx.fillStyle = 'red';
+				bullets.forEach(bullet => {
+					ctx.beginPath();
+					ctx.arc(bullet.x, bullet.y, bullet.radius, 0, Math.PI * 2);
+					ctx.fill();
+
+					// 更新炮弹位置
+					bullet.x += bulletSpeed * Math.cos(bullet.angle);
+					bullet.y += bulletSpeed * Math.sin(bullet.angle);
+
+					// 移除飞出屏幕的炮弹
+					if (bullet.x < 0 || bullet.x > canvas.width || bullet.y < 0 || bullet.y > canvas.height) {
+						bullets.splice(bullets.indexOf(bullet), 1);
+					}
+				});
+			}
+
+			// 更新蓝方飞机位置
+			function updateBluePlane() {
+				bluePlane.x -= bluePlane.speed;
+				if (bluePlane.x < -bluePlane.width) {
+					bluePlane.x = canvas.width;
+					bluePlane.y = Math.random() * (canvas.height - bluePlane.height);
+				}
+			}
+
+			// 检查游戏是否结束
+			function checkGameOver() {
+				// 根据游戏逻辑设置isGameOver标志
+				// ...
+			}
+
+			// 更新得分显示
+			function updateScoreDisplay() {
+				player1ScoreDisplay.textContent = player1Score;
+				player2ScoreDisplay.textContent = player2Score;
+				highScoreDisplay.textContent = Math.max(highScore, player1Score, player2Score);
+			}
+
+			// 控制面板逻辑
+			document.getElementById('angle').addEventListener('input', function() {
+				cannonAngle = parseInt(this.value);
+				angleValue.textContent = cannonAngle + '°';
+			});
+
+			fireCannonButton.addEventListener('click', fireCannon);
+
+			planeSpeedInput.addEventListener('input', function() {
+				bluePlane.speed = parseInt(this.value);
+			});
+
+			// 键盘控制蓝方飞机
+			document.addEventListener('keydown', function(event) {
+				switch (event.key) {
+					case 'ArrowUp':
+						bluePlane.y -= 5;
+						break;
+					case 'ArrowDown':
+						bluePlane.y += 5;
+						break;
+					case 'ArrowLeft':
+						bluePlane.x -= 5;
+						break;
+					case 'ArrowRight':
+						bluePlane.x += 5;
+						break;
+				}
+			});
+
+			// 初始化游戏
+			init();
+		</script>
+	</body>
+</html>
